@@ -1,15 +1,15 @@
 const STORAGE_KEYS = {
-  videoDataUrl: "indonesiaRayaVideoDataUrl",
-  videoName: "indonesiaRayaVideoName",
   lastPlayed: "indonesiaRayaLastPlayedDate",
 };
 
 const videoEl = document.getElementById("anthemVideo");
 const videoFileInput = document.getElementById("videoFile");
-const saveFileBtn = document.getElementById("saveFileBtn");
 const playNowBtn = document.getElementById("playNowBtn");
 const clearFileBtn = document.getElementById("clearFileBtn");
 const statusText = document.getElementById("statusText");
+
+let selectedVideoFile = null;
+let selectedVideoObjectUrl = "";
 
 function setStatus(message) {
   statusText.textContent = message;
@@ -22,61 +22,33 @@ function getTodayKey(date = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
-function getStoredVideoDataUrl() {
-  return localStorage.getItem(STORAGE_KEYS.videoDataUrl);
-}
-
-function setVideoSource(dataUrl) {
-  videoEl.src = dataUrl;
-}
-
-function fileToDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error("Gagal membaca file video."));
-    reader.readAsDataURL(file);
-  });
-}
-
-async function saveSelectedFileToLocalStorage() {
-  const file = videoFileInput.files[0];
-  if (!file) {
-    setStatus("Pilih file video terlebih dahulu.");
-    return;
+function setVideoSourceFromFile(file) {
+  if (selectedVideoObjectUrl) {
+    URL.revokeObjectURL(selectedVideoObjectUrl);
   }
 
-  try {
-    const dataUrl = await fileToDataUrl(file);
-    localStorage.setItem(STORAGE_KEYS.videoDataUrl, dataUrl);
-    localStorage.setItem(STORAGE_KEYS.videoName, file.name);
-    setVideoSource(dataUrl);
-    setStatus(`File \"${file.name}\" berhasil disimpan ke localStorage.`);
-  } catch (error) {
-    setStatus(
-      "Gagal menyimpan file. Ukuran video mungkin terlalu besar untuk localStorage browser."
-    );
-  }
+  selectedVideoFile = file;
+  selectedVideoObjectUrl = URL.createObjectURL(file);
+  videoEl.src = selectedVideoObjectUrl;
 }
 
-function clearStoredVideo() {
-  localStorage.removeItem(STORAGE_KEYS.videoDataUrl);
-  localStorage.removeItem(STORAGE_KEYS.videoName);
+function clearSelectedVideo() {
+  if (selectedVideoObjectUrl) {
+    URL.revokeObjectURL(selectedVideoObjectUrl);
+  }
+
+  selectedVideoFile = null;
+  selectedVideoObjectUrl = "";
   videoEl.removeAttribute("src");
   videoEl.load();
   videoFileInput.value = "";
-  setStatus("Video tersimpan telah dihapus.");
+  setStatus("Pilihan file di-reset. Pilih file lagi untuk memutar.");
 }
 
 async function playVideo(reason = "Pemutaran dimulai") {
-  const source = getStoredVideoDataUrl();
-  if (!source) {
-    setStatus("Belum ada video lokal tersimpan. Pilih file lalu simpan dulu.");
+  if (!selectedVideoFile || !selectedVideoObjectUrl) {
+    setStatus("Belum ada file video dipilih. Pilih file terlebih dahulu.");
     return;
-  }
-
-  if (videoEl.src !== source) {
-    setVideoSource(source);
   }
 
   try {
@@ -107,9 +79,8 @@ async function checkScheduleAndPlay() {
     return;
   }
 
-  const source = getStoredVideoDataUrl();
-  if (!source) {
-    setStatus("Pukul 10:00 terlewati, tapi belum ada video lokal tersimpan.");
+  if (!selectedVideoFile || !selectedVideoObjectUrl) {
+    setStatus("Pukul 10:00 terlewati, tapi belum ada file video dipilih.");
     return;
   }
 
@@ -117,8 +88,14 @@ async function checkScheduleAndPlay() {
   await playVideo("Indonesia Raya diputar otomatis");
 }
 
-saveFileBtn.addEventListener("click", async () => {
-  await saveSelectedFileToLocalStorage();
+videoFileInput.addEventListener("change", () => {
+  const file = videoFileInput.files[0];
+  if (!file) {
+    return;
+  }
+
+  setVideoSourceFromFile(file);
+  setStatus(`File "${file.name}" dipilih. Menunggu pukul 10:00.`);
 });
 
 playNowBtn.addEventListener("click", async () => {
@@ -126,17 +103,15 @@ playNowBtn.addEventListener("click", async () => {
 });
 
 clearFileBtn.addEventListener("click", () => {
-  clearStoredVideo();
+  clearSelectedVideo();
 });
 
-const initialVideo = getStoredVideoDataUrl();
-if (initialVideo) {
-  setVideoSource(initialVideo);
-  const name = localStorage.getItem(STORAGE_KEYS.videoName) || "video tersimpan";
-  setStatus(`Video lokal \"${name}\" siap. Menunggu pukul 10:00.`);
-} else {
-  setStatus("Belum ada video lokal tersimpan. Pilih file lalu simpan.");
-}
-
+setStatus("Belum ada file video dipilih.");
 checkScheduleAndPlay();
 setInterval(checkScheduleAndPlay, 30 * 1000);
+
+window.addEventListener("beforeunload", () => {
+  if (selectedVideoObjectUrl) {
+    URL.revokeObjectURL(selectedVideoObjectUrl);
+  }
+});
