@@ -14,15 +14,13 @@
       </p>
 
       <section class="controls">
-        <label for="videoUrl">URL Video (MP4/WebM/Ogg)</label>
-        <input
-          id="videoUrl"
-          type="url"
-          placeholder="https://contoh.com/indonesia-raya.mp4"
-        />
+        <label for="videoFile">Pilih file video lokal (MP4/WebM/Ogg)</label>
+        <input id="videoFile" type="file" accept="video/mp4,video/webm,video/ogg" />
+
         <div class="button-group">
-          <button id="saveUrlBtn">Simpan URL</button>
+          <button id="saveFileBtn">Simpan ke Local Storage</button>
           <button id="playNowBtn" class="secondary">Putar Sekarang</button>
+          <button id="clearFileBtn" class="secondary danger">Hapus Video Tersimpan</button>
         </div>
       </section>
 
