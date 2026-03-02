@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pemutar Indonesia Raya</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Pemutar Video Indonesia Raya</h1>
+      <p>
+        Pilih file video lokal, lalu aplikasi akan memutar otomatis setiap hari pukul
+        <strong>10:00</strong> selama halaman tetap terbuka.
+      </p>
+
+      <section class="controls">
+        <label for="videoFile">Pilih file video lokal (MP4/WebM/Ogg)</label>
+        <input id="videoFile" type="file" accept="video/mp4,video/webm,video/ogg" />
+
+        <div class="button-group">
+          <button id="playNowBtn" class="secondary">Putar Sekarang</button>
+          <button id="clearFileBtn" class="danger">Reset Pilihan File</button>
+        </div>
+      </section>
+
+      <section class="player-card">
+        <video id="anthemVideo" controls preload="auto"></video>
+        <p id="statusText" class="status"></p>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
